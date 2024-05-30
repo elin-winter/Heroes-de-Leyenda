@@ -1,7 +1,6 @@
 module LibraryNati where
 import PdePreludat
 
-
 type Reconocimiento = Number
 type Artefactos = [Artefacto]
 type Rareza = Number
@@ -16,7 +15,7 @@ data Heroe = UnHeroe{
     epiteto :: Epiteto,
     artefactos :: Artefactos,
     tareas :: [Tarea]
-}
+} deriving (Show, Eq)
 
 heracles :: Heroe
 heracles = UnHeroe {
@@ -29,7 +28,7 @@ heracles = UnHeroe {
 data Artefacto = UnArtefacto {
     nombreArtefacto :: Nombre,
     rareza :: Rareza
-}
+}deriving (Show, Eq)
 
 lanzaOlimpo :: Artefacto
 lanzaOlimpo = UnArtefacto{
@@ -55,11 +54,10 @@ pistola = UnArtefacto {
     rareza = 1000
 }
 
-
 data Bestia = UnaBestia {
     nombreBestia :: Nombre,
     debilidad :: Debilidad
-}
+}deriving (Show, Eq)
 
 leonNemea :: Bestia
 leonNemea = UnaBestia{
@@ -68,14 +66,17 @@ leonNemea = UnaBestia{
 }
 --Funcion 1
 
-agregarArtefacto :: Heroe -> Artefacto -> Artefactos
-agregarArtefacto heroe artefacto = (artefactos heroe) ++ [artefacto]
+agregarArtefacto :: Artefacto -> Heroe -> Heroe
+agregarArtefacto artefacto heroe  = heroe {artefactos = (artefactos heroe) ++ [artefacto]}
+
+modificarEpiteto :: Epiteto -> Heroe  -> Heroe
+modificarEpiteto nuevoEpiteto heroe = heroe{epiteto = nuevoEpiteto}
 
 pasarALaHistoria :: Heroe -> Heroe
 pasarALaHistoria heroe
-    |reconocimiento heroe > 1000 = heroe {epiteto = "El Mítico"}
-    |reconocimiento heroe >= 500 = heroe {epiteto = "El Magnífico", artefactos = agregarArtefacto heroe lanzaOlimpo}
-    |reconocimiento heroe > 100 = heroe {epiteto = "Hoplita", artefactos = agregarArtefacto heroe xiphos}
+    |reconocimiento heroe > 1000 = modificarEpiteto "El Mítico" heroe
+    |reconocimiento heroe >= 500 = (modificarEpiteto "El Magnífico" . agregarArtefacto lanzaOlimpo) heroe
+    |reconocimiento heroe > 100 = (modificarEpiteto "Hoplita" . agregarArtefacto xiphos) heroe
     |otherwise = heroe
 
 -- Funcion 2
@@ -84,11 +85,11 @@ pasarALaHistoria heroe
 obtenerRareza :: Artefacto -> Rareza
 obtenerRareza = rareza
 
-obtenerReconocimientoHeroe :: Artefacto -> Heroe -> Reconocimiento
-obtenerReconocimientoHeroe artefacto heroe = reconocimiento heroe + obtenerRareza artefacto
+modificarReconocimiento :: Number -> Heroe -> Heroe
+modificarReconocimiento x heroe = heroe {reconocimiento = reconocimiento heroe + x}
 
 encontrarArtefacto ::Artefacto -> Tarea
-encontrarArtefacto artefacto heroe = heroe {reconocimiento = obtenerReconocimientoHeroe artefacto heroe, artefactos = agregarArtefacto heroe artefacto}
+encontrarArtefacto artefacto = modificarReconocimiento (obtenerRareza artefacto) . agregarArtefacto artefacto
 
 -- Tarea 2
 
@@ -104,17 +105,11 @@ desecharNoAlcanzanMinimoRareza = filter ((>1000) . rareza)
 obtenerArtefactosFiltrados :: Artefactos  -> Artefactos
 obtenerArtefactosFiltrados  = desecharNoAlcanzanMinimoRareza . triplicarRarezaArtefactos 
 
-incrementarReconocimiento :: Heroe -> Heroe
-incrementarReconocimiento heroe = heroe {reconocimiento = (reconocimiento heroe) + 500}
-
 actualizarArtefactos ::  Heroe -> Heroe
 actualizarArtefactos heroe = heroe { artefactos = obtenerArtefactosFiltrados (artefactos heroe)}
 
-agregarRelampagoZeus ::   Heroe -> Heroe
-agregarRelampagoZeus heroe = heroe {artefactos = agregarArtefacto heroe relampagoZeus}
-
 escalarOlimpo :: Tarea
-escalarOlimpo = agregarRelampagoZeus . actualizarArtefactos . incrementarReconocimiento
+escalarOlimpo = agregarArtefacto relampagoZeus . actualizarArtefactos . modificarReconocimiento 500
 
 --Tarea 3
 
@@ -128,9 +123,6 @@ armarGroso cuadras = "Gros" ++ replicate cuadras 'o'
 
 epitetoBestia :: Bestia -> Epiteto
 epitetoBestia bestia = "El asesino de la " ++ (nombreBestia bestia)
-
-modificarEpiteto :: Epiteto -> Heroe  -> Heroe
-modificarEpiteto nuevoEpiteto heroe = heroe{epiteto = nuevoEpiteto}
 
 perderArtefactos :: Heroe  -> Heroe
 perderArtefactos  heroe = heroe{artefactos = drop 1 (artefactos heroe)}
